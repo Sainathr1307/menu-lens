@@ -4,8 +4,12 @@ const OVERPASS_API_URL = "https://overpass-api.de/api/interpreter";
 
 interface OSMNode {
     id: number;
-    lat: number;
-    lon: number;
+    lat?: number;
+    lon?: number;
+    center?: {
+        lat: number;
+        lon: number;
+    };
     tags: {
         name?: string;
         "addr:street"?: string;
@@ -14,12 +18,16 @@ interface OSMNode {
     };
 }
 
-export const fetchNearbyRestaurants = async (lat: number, lng: number, radius: number = 2000): Promise<Restaurant[]> => {
-    // Query for restaurants within 'radius' meters
+export const fetchNearbyRestaurants = async (lat: number, lng: number, radius: number = 5000): Promise<Restaurant[]> => {
+    // Query for restaurants within 'radius' meters (default 5km)
+    // We fetch both nodes (points) and ways (buildings)
     const query = `
     [out:json][timeout:25];
-    node["amenity"="restaurant"](around:${radius},${lat},${lng});
-    out body 10;
+    (
+      node["amenity"="restaurant"](around:${radius},${lat},${lng});
+      way["amenity"="restaurant"](around:${radius},${lat},${lng});
+    );
+    out center 20;
   `;
 
     try {
@@ -33,30 +41,35 @@ export const fetchNearbyRestaurants = async (lat: number, lng: number, radius: n
         }
 
         const data = await response.json();
-        const nodes: OSMNode[] = data.elements;
+        const elements: OSMNode[] = data.elements;
 
-        // Map OSM nodes to our Restaurant interface
-        return nodes
-            .filter((node) => node.tags.name) // Only use restaurants with names
-            .map((node, index) => {
+        // Map OSM elements to our Restaurant interface
+        return elements
+            .filter((element) => element.tags && element.tags.name) // Only use restaurants with names
+            .map((element, index) => {
                 // Assign a random menu for demo purposes
                 const isSouthIndian = index % 2 !== 0;
                 const menu = isSouthIndian ? mockSouthIndianMenu : mockIndianMenu;
 
                 // Generate a consistent random rating between 3.5 and 5.0
-                const rating = 3.5 + (node.id % 15) / 10;
+                const rating = 3.5 + (element.id % 15) / 10;
+
+                // For 'way' elements, Overpass 'out center' provides 'center' object with lat/lon
+                // For 'node' elements, it provides 'lat' and 'lon' directly
+                const lat = element.lat || (element.center && element.center.lat) || 0;
+                const lng = element.lon || (element.center && element.center.lon) || 0;
 
                 return {
-                    id: `osm-${node.id}`,
-                    name: node.tags.name || "Unknown Restaurant",
-                    location: node.tags["addr:street"] || "Nearby",
+                    id: `osm-${element.id}`,
+                    name: element.tags.name || "Unknown Restaurant",
+                    location: element.tags["addr:street"] || "Nearby",
                     // Use placeholder images cyclically
                     image: index % 2 === 0 ? "/images/restaurant1.jpg" : "/images/restaurant2.jpg",
                     rating: parseFloat(rating.toFixed(1)),
                     distance: "Calculating...", // Will be updated by the UI
                     coordinates: {
-                        lat: node.lat,
-                        lng: node.lon,
+                        lat: lat,
+                        lng: lng,
                     },
                     menu: menu,
                 };
