@@ -1,21 +1,68 @@
 "use client";
 
-import { useState } from "react";
-import { restaurants } from "@/data/mockData";
+import { useState, useEffect } from "react";
+import { restaurants, Restaurant } from "@/data/mockData";
 import RestaurantCard from "@/components/RestaurantCard";
 
 export default function Home() {
   const [isLocating, setIsLocating] = useState(false);
   const [locationDetected, setLocationDetected] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [sortedRestaurants, setSortedRestaurants] = useState<Restaurant[]>([]);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // Haversine formula to calculate distance in miles
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 3959; // Radius of Earth in miles
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
   const handleLocate = () => {
     setIsLocating(true);
-    // Simulate location detection delay
-    setTimeout(() => {
+    setErrorMsg(null);
+
+    if (!navigator.geolocation) {
+      setErrorMsg("Geolocation is not supported by your browser");
       setIsLocating(false);
-      setLocationDetected(true);
-    }, 1500);
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+
+        // Sort restaurants by distance
+        const sorted = [...restaurants].map(r => {
+          const dist = calculateDistance(latitude, longitude, r.coordinates.lat, r.coordinates.lng);
+          return { ...r, distance: `${dist.toFixed(1)} miles` };
+        }).sort((a, b) => parseFloat(a.distance as string) - parseFloat(b.distance as string));
+
+        setSortedRestaurants(sorted);
+        setLocationDetected(true);
+        setIsLocating(false);
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        setErrorMsg("Unable to retrieve your location. Please allow access.");
+        setIsLocating(false);
+      }
+    );
   };
+
+  // Auto-detect location on mount
+  useEffect(() => {
+    handleLocate();
+  }, []);
 
   return (
     <main className="min-h-screen pb-20 px-4 pt-8 max-w-md mx-auto md:max-w-2xl lg:max-w-4xl">
@@ -29,17 +76,36 @@ export default function Home() {
       <section className="mb-10 animate-[slide-up_0.5s_ease-out_0.2s_both]">
         {!locationDetected ? (
           <div className="bg-card/50 backdrop-blur-sm border border-white/5 rounded-2xl p-8 text-center">
-            <div className="mb-4 text-5xl">📍</div>
-            <h2 className="text-xl font-bold mb-2">Where are you dining?</h2>
+            <div className="mb-4 text-5xl animate-bounce">📍</div>
+            <h2 className="text-xl font-bold mb-2">Locating you...</h2>
             <p className="text-muted-foreground text-sm mb-6">
               We need your location to show you the right menu.
             </p>
+
+            {errorMsg && (
+              <div className="mb-4">
+                <p className="text-red-500 text-sm mb-2">{errorMsg}</p>
+                <p className="text-xs text-muted-foreground mb-4">
+                  (Note: Location features require HTTPS on mobile. You may need to deploy the app to test this.)
+                </p>
+                <button
+                  onClick={() => {
+                    setSortedRestaurants(restaurants); // Show unsorted
+                    setLocationDetected(true);
+                  }}
+                  className="text-sm text-primary underline"
+                >
+                  View Restaurants Anyway
+                </button>
+              </div>
+            )}
+
             <button
               onClick={handleLocate}
               disabled={isLocating}
               className="w-full py-3 px-6 bg-primary text-primary-foreground font-bold rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
             >
-              {isLocating ? "Locating..." : "Detect My Location"}
+              {isLocating ? "Detecting Location..." : "Try Again"}
             </button>
           </div>
         ) : (
@@ -48,14 +114,19 @@ export default function Home() {
               <span className="text-2xl">📍</span>
               <div>
                 <p className="text-xs text-muted-foreground">Current Location</p>
-                <p className="font-bold text-foreground">Downtown, Spice District</p>
+                <p className="font-bold text-foreground">
+                  {userLocation ? `${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}` : "Unknown"}
+                </p>
               </div>
             </div>
             <button
-              onClick={() => setLocationDetected(false)}
+              onClick={() => {
+                setLocationDetected(false);
+                handleLocate();
+              }}
               className="text-xs text-primary hover:underline"
             >
-              Change
+              Refresh
             </button>
           </div>
         )}
@@ -66,11 +137,11 @@ export default function Home() {
         <section className="animate-[slide-up_0.5s_ease-out_0.1s_both]">
           <div className="flex justify-between items-end mb-6">
             <h2 className="text-2xl font-serif font-bold">Nearby Restaurants</h2>
-            <span className="text-xs text-muted-foreground">{restaurants.length} found</span>
+            <span className="text-xs text-muted-foreground">{sortedRestaurants.length} found</span>
           </div>
 
           <div className="grid gap-6 md:grid-cols-2">
-            {restaurants.map((restaurant) => (
+            {sortedRestaurants.map((restaurant) => (
               <RestaurantCard key={restaurant.id} restaurant={restaurant} />
             ))}
           </div>

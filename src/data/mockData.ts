@@ -34,6 +34,10 @@ export interface Restaurant {
     image: string;
     rating: number;
     distance: string;
+    coordinates: {
+        lat: number;
+        lng: number;
+    };
     menu: Dish[];
 }
 
@@ -44,7 +48,11 @@ export const restaurants: Restaurant[] = [
         location: "123 Spice Avenue, Downtown",
         image: "/images/restaurant1.jpg",
         rating: 4.8,
-        distance: "0.5 miles",
+        distance: "0.5 miles", // Fallback
+        coordinates: {
+            lat: 40.7128, // Example: New York
+            lng: -74.0060,
+        },
         menu: [
             {
                 id: "d1",
@@ -130,7 +138,11 @@ export const restaurants: Restaurant[] = [
         location: "456 Curry Lane, Westside",
         image: "/images/restaurant2.jpg",
         rating: 4.5,
-        distance: "1.2 miles",
+        distance: "1.2 miles", // Fallback
+        coordinates: {
+            lat: 40.730610, // Slightly different location
+            lng: -73.935242,
+        },
         menu: [
             {
                 id: "d4",
