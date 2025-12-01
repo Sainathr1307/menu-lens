@@ -53,8 +53,18 @@ export default function Home() {
       },
       (error) => {
         console.error("Error getting location:", error);
-        setErrorMsg("Unable to retrieve your location. Please allow access.");
+        let msg = "Unable to retrieve your location.";
+        if (error.code === 1) msg = "Location permission denied. Please allow access.";
+        if (error.code === 2) msg = "Location unavailable. Check your GPS.";
+        if (error.code === 3) msg = "Location request timed out.";
+
+        setErrorMsg(msg);
         setIsLocating(false);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000, // 10 seconds timeout
+        maximumAge: 0
       }
     );
   };
@@ -139,6 +149,13 @@ export default function Home() {
             <h2 className="text-2xl font-serif font-bold">Nearby Restaurants</h2>
             <span className="text-xs text-muted-foreground">{sortedRestaurants.length} found</span>
           </div>
+
+          {/* Distance Warning */}
+          {sortedRestaurants.length > 0 && parseFloat(sortedRestaurants[0].distance as string) > 50 && (
+            <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 mb-6 text-sm text-yellow-500">
+              ⚠️ You seem to be far from our demo restaurants (New York). We've listed them anyway!
+            </div>
+          )}
 
           <div className="grid gap-6 md:grid-cols-2">
             {sortedRestaurants.map((restaurant) => (
