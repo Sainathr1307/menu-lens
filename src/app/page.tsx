@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { restaurants, Restaurant } from "@/data/mockData";
+import { restaurants as mockRestaurants, Restaurant } from "@/data/mockData";
 import RestaurantCard from "@/components/RestaurantCard";
+import { fetchNearbyRestaurants } from "@/services/osmService";
 
 export default function Home() {
   const [isLocating, setIsLocating] = useState(false);
@@ -10,6 +11,7 @@ export default function Home() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [sortedRestaurants, setSortedRestaurants] = useState<Restaurant[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [usingRealData, setUsingRealData] = useState(false);
 
   // Haversine formula to calculate distance in miles
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -37,19 +39,41 @@ export default function Home() {
     }
 
     navigator.geolocation.getCurrentPosition(
-      (position) => {
+      async (position) => {
         const { latitude, longitude } = position.coords;
         setUserLocation({ lat: latitude, lng: longitude });
 
-        // Sort restaurants by distance
-        const sorted = [...restaurants].map(r => {
-          const dist = calculateDistance(latitude, longitude, r.coordinates.lat, r.coordinates.lng);
-          return { ...r, distance: `${dist.toFixed(1)} miles` };
-        }).sort((a, b) => parseFloat(a.distance as string) - parseFloat(b.distance as string));
+        try {
+          // Fetch real restaurants from OSM
+          const realRestaurants = await fetchNearbyRestaurants(latitude, longitude);
 
-        setSortedRestaurants(sorted);
-        setLocationDetected(true);
-        setIsLocating(false);
+          let restaurantsToDisplay = realRestaurants;
+          let isReal = true;
+
+          if (realRestaurants.length === 0) {
+            console.log("No real restaurants found, using mock data.");
+            restaurantsToDisplay = mockRestaurants;
+            isReal = false;
+          }
+
+          setUsingRealData(isReal);
+
+          // Sort restaurants by distance
+          const sorted = [...restaurantsToDisplay].map(r => {
+            const dist = calculateDistance(latitude, longitude, r.coordinates.lat, r.coordinates.lng);
+            return { ...r, distance: `${dist.toFixed(1)} miles` };
+          }).sort((a, b) => parseFloat(a.distance as string) - parseFloat(b.distance as string));
+
+          setSortedRestaurants(sorted);
+          setLocationDetected(true);
+        } catch (err) {
+          console.error("Failed to load real data", err);
+          // Fallback to mock data on error
+          setSortedRestaurants(mockRestaurants);
+          setLocationDetected(true);
+        } finally {
+          setIsLocating(false);
+        }
       },
       (error) => {
         console.error("Error getting location:", error);
@@ -100,7 +124,7 @@ export default function Home() {
                 </p>
                 <button
                   onClick={() => {
-                    setSortedRestaurants(restaurants); // Show unsorted
+                    setSortedRestaurants(mockRestaurants); // Show unsorted mock data
                     setLocationDetected(true);
                   }}
                   className="text-sm text-primary underline"
@@ -150,10 +174,10 @@ export default function Home() {
             <span className="text-xs text-muted-foreground">{sortedRestaurants.length} found</span>
           </div>
 
-          {/* Distance Warning */}
-          {sortedRestaurants.length > 0 && parseFloat(sortedRestaurants[0].distance as string) > 50 && (
+          {/* Distance Warning - Only show if using mock data and far away */}
+          {!usingRealData && sortedRestaurants.length > 0 && parseFloat(sortedRestaurants[0].distance as string) > 50 && (
             <div className="bg-yellow-500/10 border border-yellow-500/20 rounded-xl p-4 mb-6 text-sm text-yellow-500">
-              ⚠️ You seem to be far from our demo restaurants (New York). We've listed them anyway!
+              ⚠️ No restaurants found nearby. Showing demo restaurants from New York.
             </div>
           )}
 
