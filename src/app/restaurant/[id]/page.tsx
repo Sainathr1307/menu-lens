@@ -1,17 +1,48 @@
 "use client";
 
-import { useState, use } from "react";
+import { useState, use, useEffect } from "react";
 import Link from "next/link";
-import { restaurants } from "@/data/mockData";
+import { restaurants, Restaurant } from "@/data/mockData";
 import DishCard from "@/components/DishCard";
 import { useRouter } from "next/navigation";
+import { fetchRestaurantById } from "@/services/osmService";
 
 export default function RestaurantPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params);
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
 
-    const restaurant = restaurants.find(r => r.id === resolvedParams.id);
+    // Initialize with static data if available
+    const [restaurant, setRestaurant] = useState<Restaurant | undefined>(
+        restaurants.find(r => r.id === resolvedParams.id)
+    );
+    const [loading, setLoading] = useState(!restaurant);
+
+    useEffect(() => {
+        // If not found in static data and looks like an OSM ID, fetch it
+        if (!restaurant && resolvedParams.id.startsWith("osm-")) {
+            setLoading(true);
+            fetchRestaurantById(resolvedParams.id)
+                .then((data) => {
+                    if (data) setRestaurant(data);
+                })
+                .catch(err => console.error("Failed to fetch restaurant", err))
+                .finally(() => setLoading(false));
+        } else if (!restaurant) {
+            setLoading(false);
+        }
+    }, [resolvedParams.id, restaurant]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-background text-foreground">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="text-4xl animate-bounce">🥘</div>
+                    <p className="font-serif text-xl">Loading Menu...</p>
+                </div>
+            </div>
+        );
+    }
 
     if (!restaurant) {
         return (
