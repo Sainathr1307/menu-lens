@@ -1,12 +1,4 @@
 import {
-    Restaurant,
-    mockIndianMenu,
-    mockSouthIndianMenu,
-    mockPizzaMenu,
-    mockBurgerMenu,
-    mockSushiMenu,
-    mockMexicanMenu,
-    mockChineseMenu,
     Dish
 } from "@/data/mockData";
 
@@ -26,32 +18,35 @@ interface OSMNode {
         "addr:street"?: string;
         cuisine?: string;
         amenity?: string;
+        website?: string;
     };
 }
+
+import { worldCuisines } from "@/data/worldCuisines";
 
 const getMenuForCuisine = (tags: OSMNode["tags"]): Dish[] => {
     const cuisine = tags.cuisine?.toLowerCase() || "";
     const name = tags.name?.toLowerCase() || "";
+    const combined = `${cuisine} ${name}`;
 
-    // Check explicit cuisine tag first
-    if (cuisine.includes("pizza") || cuisine.includes("italian")) return mockPizzaMenu;
-    if (cuisine.includes("burger") || cuisine.includes("american")) return mockBurgerMenu;
-    if (cuisine.includes("sushi") || cuisine.includes("japanese")) return mockSushiMenu;
-    if (cuisine.includes("mexican") || cuisine.includes("taco")) return mockMexicanMenu;
-    if (cuisine.includes("chinese") || cuisine.includes("asian")) return mockChineseMenu;
-    if (cuisine.includes("indian")) return mockIndianMenu;
+    // Helper to check keywords
+    const has = (keywords: string[]) => keywords.some(k => combined.includes(k));
 
-    // Fallback: Check name for keywords
-    if (name.includes("pizza") || name.includes("pizzeria")) return mockPizzaMenu;
-    if (name.includes("burger") || name.includes("grill")) return mockBurgerMenu;
-    if (name.includes("sushi")) return mockSushiMenu;
-    if (name.includes("taco") || name.includes("mexican")) return mockMexicanMenu;
-    if (name.includes("chinese") || name.includes("wok")) return mockChineseMenu;
-    if (name.includes("curry") || name.includes("tandoor")) return mockIndianMenu;
-    if (name.includes("dosa")) return mockSouthIndianMenu;
+    if (has(["pizza", "italian", "pasta", "trattoria", "romano", "olive"])) return worldCuisines.italian;
+    if (has(["mexican", "taco", "burrito", "cantina", "salsa", "chipotle"])) return worldCuisines.mexican;
+    if (has(["chinese", "wok", "dim sum", "dumpling", "sichuan", "cantonese", "panda"])) return worldCuisines.chinese;
+    if (has(["japanese", "sushi", "ramen", "teriyaki", "tempura", "izakaya", "tokyo"])) return worldCuisines.japanese;
+    if (has(["thai", "siam", "bangkok", "pad thai", "curry", "lemongrass"])) return worldCuisines.thai;
+    if (has(["burger", "grill", "bbq", "american", "diner", "steak", "pub"])) return worldCuisines.burger; // Using burger as generic american/bbq for now
+    if (has(["indian", "curry", "tandoor", "masala", "spice", "delhi", "bombay"])) return worldCuisines.indian;
 
-    // Default to Indian if unknown (as per original theme) or rotate based on random logic if preferred
-    return mockIndianMenu;
+    // Fallbacks for other common types
+    if (has(["cafe", "coffee", "bakery", "donut", "bagel", "breakfast", "brunch"])) return worldCuisines.generic; // Could add specific breakfast menu later
+    if (has(["seafood", "fish", "crab", "lobster", "oyster"])) return worldCuisines.generic; // Could add seafood menu
+    if (has(["bar", "pub", "brewery", "tavern"])) return worldCuisines.burger;
+
+    // Default to a high-quality generic menu instead of just Indian
+    return worldCuisines.generic;
 };
 
 export const fetchNearbyRestaurants = async (lat: number, lng: number, radius: number = 5000): Promise<Restaurant[]> => {
@@ -94,12 +89,27 @@ export const fetchNearbyRestaurants = async (lat: number, lng: number, radius: n
                 const lat = element.lat || (element.center && element.center.lat) || 0;
                 const lng = element.lon || (element.center && element.center.lon) || 0;
 
+                // Logo Logic
+                let logoUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(element.tags.name || "R")}&background=random&color=fff&size=128`;
+                if (element.tags.website) {
+                    // Use Google Favicon API if website is available
+                    // Extract domain from website url
+                    try {
+                        const domain = new URL(element.tags.website.startsWith("http") ? element.tags.website : `http://${element.tags.website}`).hostname;
+                        logoUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+                    } catch (e) {
+                        // Fallback to avatar if URL parsing fails
+                    }
+                }
+
                 return {
                     id: `osm-${element.type}-${element.id}`, // Include type to be unique and queryable
                     name: element.tags.name || "Unknown Restaurant",
                     location: element.tags["addr:street"] || "Nearby",
                     // Use placeholder images cyclically
                     image: index % 2 === 0 ? "/images/restaurant1.jpg" : "/images/restaurant2.jpg",
+                    logoUrl: logoUrl,
+                    websiteUrl: element.tags.website, // Pass website URL
                     rating: parseFloat(rating.toFixed(1)),
                     distance: "Calculating...", // Will be updated by the UI
                     coordinates: {
@@ -158,6 +168,7 @@ export const fetchRestaurantById = async (id: string): Promise<Restaurant | null
             distance: "", // Not needed for detail page
             coordinates: { lat, lng },
             menu: menu,
+            websiteUrl: element.tags.website, // Pass website URL
         };
     } catch (error) {
         console.error("Error fetching restaurant by ID:", error);

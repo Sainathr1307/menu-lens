@@ -2,7 +2,8 @@
 
 import { use, useState, useEffect } from "react";
 import Link from "next/link";
-import { restaurants, getAllDishes, Restaurant } from "@/data/mockData";
+import { restaurants, Restaurant } from "@/data/mockData";
+import { getDishById } from "@/services/dishService";
 import NutritionInfo from "@/components/NutritionInfo";
 import ReviewGallery from "@/components/ReviewGallery";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -18,8 +19,7 @@ export default function DishPage({ params }: { params: Promise<{ id: string }> }
     const [loadingRestaurant, setLoadingRestaurant] = useState(!!restaurantId);
 
     // Find dish globally
-    const allDishes = getAllDishes();
-    const dish = allDishes.find(d => d.id === resolvedParams.id);
+    const dish = getDishById(resolvedParams.id);
 
     useEffect(() => {
         if (restaurantId) {

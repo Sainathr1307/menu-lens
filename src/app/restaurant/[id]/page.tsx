@@ -57,12 +57,12 @@ export default function RestaurantPage({ params }: { params: Promise<{ id: strin
         );
     }
 
-    const filteredDishes = restaurant.menu.filter(dish =>
-        dish.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        dish.description.toLowerCase().includes(searchQuery.toLowerCase())
+    const filteredDishes = (restaurant?.menu || []).filter(dish =>
+        dish?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        dish?.description?.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
-    const famousDishes = restaurant.menu.filter(d => d.isFamous);
+    const famousDishes = (restaurant?.menu || []).filter(d => d?.isFamous);
 
     return (
         <main className="min-h-screen pb-20 max-w-md mx-auto md:max-w-2xl lg:max-w-4xl bg-background">

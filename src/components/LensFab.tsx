@@ -53,7 +53,7 @@ export default function LensFab({ activeLens, onLensChange }: LensFabProps) {
             <motion.button
                 whileTap={{ scale: 0.9 }}
                 onClick={toggleOpen}
-                className={`p-4 rounded-full shadow-2xl text-white flex items-center justify-center transition-colors ${activeLens !== "none" ? "bg-primary" : "bg-gray-900 border border-white/20"
+                className={`p-4 rounded-full shadow-2xl text-white flex items-center justify-center transition-colors ${activeLens !== "none" ? "bg-accent text-black" : "bg-primary text-black border border-white/20"
                     }`}
             >
                 {isOpen ? <X size={24} /> : <ScanEye size={24} />}

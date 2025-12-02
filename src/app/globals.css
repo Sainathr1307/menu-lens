@@ -7,18 +7,23 @@
   --color-background: #0a0a0a;
   --color-foreground: #ededed;
 
-  --color-primary: #DC2626;
-  /* Red-600 */
-  --color-primary-foreground: #ffffff;
+  --color-primary: #F59E0B;
+  /* Amber-500 (Golden/Appetizing) */
+  --color-primary-foreground: #000000;
+
+  --color-secondary: #DC2626;
+  /* Red-600 (Passion/Heat) */
+  --color-secondary-foreground: #ffffff;
+
+  --color-accent: #14B8A6;
+  /* Teal-500 (Freshness/Vegan) */
+  --color-accent-foreground: #ffffff;
 
   --color-card: #171717;
   --color-card-foreground: #ededed;
 
   --color-muted: #262626;
   --color-muted-foreground: #a3a3a3;
-
-  --color-accent: #DC2626;
-  --color-accent-foreground: #ffffff;
 
   --animate-fade-in: fade-in 0.5s ease-out;
   --animate-slide-up: slide-up 0.5s ease-out;

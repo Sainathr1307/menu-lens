@@ -15,6 +15,7 @@ export default function Home() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [usingRealData, setUsingRealData] = useState(false);
   const [showSwiper, setShowSwiper] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Haversine formula to calculate distance in miles
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -183,9 +184,23 @@ export default function Home() {
       {/* Restaurant List */}
       {locationDetected && (
         <section className="animate-[slide-up_0.5s_ease-out_0.1s_both]">
-          <div className="flex justify-between items-end mb-6">
-            <h2 className="text-2xl font-serif font-bold">Nearby Restaurants</h2>
-            <span className="text-xs text-muted-foreground">{sortedRestaurants.length} found</span>
+          <div className="flex flex-col gap-4 mb-6">
+            <div className="flex justify-between items-end">
+              <h2 className="text-2xl font-serif font-bold">Nearby Restaurants</h2>
+              <span className="text-xs text-muted-foreground">{sortedRestaurants.length} found</span>
+            </div>
+
+            {/* Search Bar */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Search restaurants..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-muted/50 border border-white/10 rounded-xl py-3 px-4 pl-10 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+              />
+              <span className="absolute left-3 top-3.5 text-muted-foreground">🔍</span>
+            </div>
           </div>
 
           {/* Distance Warning - Only show if using mock data and far away */}
@@ -195,11 +210,19 @@ export default function Home() {
             </div>
           )}
 
-          <div className="grid gap-6 md:grid-cols-2">
-            {sortedRestaurants.map((restaurant) => (
-              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
-            ))}
+          <div className="grid gap-8 grid-cols-2 md:grid-cols-3 lg:grid-cols-4 place-items-center">
+            {sortedRestaurants
+              .filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase()))
+              .map((restaurant) => (
+                <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+              ))}
           </div>
+
+          {sortedRestaurants.filter(r => r.name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 && (
+            <div className="text-center py-10 text-muted-foreground">
+              <p>No restaurants found matching "{searchQuery}"</p>
+            </div>
+          )}
         </section>
       )}
 

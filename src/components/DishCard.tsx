@@ -72,7 +72,7 @@ export default function DishCard({ dish, restaurantId, activeLens = "none" }: Di
                                 <h3 className="font-bold text-foreground group-hover:text-primary transition-colors line-clamp-1">
                                     {dish.name}
                                 </h3>
-                                <span className="text-sm font-medium text-primary">${dish.price}</span>
+                                <span className="text-sm font-bold text-secondary">${dish.price}</span>
                             </div>
                             <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
                                 {dish.description}
@@ -80,11 +80,11 @@ export default function DishCard({ dish, restaurantId, activeLens = "none" }: Di
                         </div>
 
                         <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1">
+                            <span className="flex items-center gap-1 text-orange-400">
                                 🔥 {dish.nutrition.calories} cal
                             </span>
                             {dish.reviews.length > 0 && (
-                                <span className="flex items-center gap-1">
+                                <span className="flex items-center gap-1 text-yellow-400">
                                     ⭐ {dish.reviews.reduce((acc, r) => acc + r.rating, 0) / dish.reviews.length} ({dish.reviews.length})
                                 </span>
                             )}

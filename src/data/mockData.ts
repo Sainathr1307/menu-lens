@@ -244,34 +244,57 @@ export const mockChineseMenu: Dish[] = [
     },
 ];
 
+export interface Restaurant {
+    id: string;
+    name: string;
+    location: string;
+    image: string;
+    logoUrl?: string; // New field for logo
+    websiteUrl?: string; // New field for website
+    rating: number;
+    distance: string;
+    coordinates: {
+        lat: number;
+        lng: number;
+    };
+    menu: Dish[];
+}
+
 // Keep existing export for backward compatibility until refactor is complete
 export const restaurants: Restaurant[] = [
     {
         id: "r1",
         name: "Royal Tandoor",
-        location: "123 Spice Avenue, Downtown",
+        location: "123 Curry Lane, New York, NY",
         image: "/images/restaurant1.jpg",
+        logoUrl: "https://ui-avatars.com/api/?name=Royal+Tandoor&background=F59E0B&color=fff&size=128",
         rating: 4.8,
-        distance: "0.5 miles", // Fallback
-        coordinates: {
-            lat: 40.7128, // Example: New York
-            lng: -74.0060,
-        },
-        menu: mockIndianMenu,
+        distance: "0.5 miles",
+        coordinates: { lat: 40.7128, lng: -74.0060 },
+        menu: mockIndianMenu
     },
     {
         id: "r2",
         name: "Spice Garden",
-        location: "456 Curry Lane, Westside",
+        location: "456 Masala Ave, New York, NY",
         image: "/images/restaurant2.jpg",
+        logoUrl: "https://ui-avatars.com/api/?name=Spice+Garden&background=14B8A6&color=fff&size=128",
         rating: 4.5,
-        distance: "1.2 miles", // Fallback
-        coordinates: {
-            lat: 40.730610, // Slightly different location
-            lng: -73.935242,
-        },
-        menu: mockSouthIndianMenu,
+        distance: "1.2 miles",
+        coordinates: { lat: 40.7148, lng: -74.0080 },
+        menu: mockSouthIndianMenu
     },
+    {
+        id: "r3",
+        name: "Pizza Palace",
+        location: "789 Dough St, New York, NY",
+        image: "/images/restaurant1.jpg",
+        logoUrl: "https://ui-avatars.com/api/?name=Pizza+Palace&background=DC2626&color=fff&size=128",
+        rating: 4.2,
+        distance: "2.0 miles",
+        coordinates: { lat: 40.7118, lng: -74.0040 },
+        menu: mockPizzaMenu
+    }
 ];
 
 export const getAllDishes = (): Dish[] => {
