@@ -78,11 +78,25 @@ export default function RestaurantPage({ params }: { params: Promise<{ id: strin
                 </Link>
 
                 <div className="absolute bottom-4 left-4 right-4">
-                    <h1 className="text-3xl font-serif font-bold text-white mb-1">{restaurant.name}</h1>
-                    <div className="flex items-center gap-2 text-sm text-gray-300">
-                        <span>★ {restaurant.rating}</span>
-                        <span>•</span>
-                        <span>{restaurant.location}</span>
+                    <div className="flex justify-between items-end">
+                        <div>
+                            <h1 className="text-3xl font-serif font-bold text-white mb-1">{restaurant.name}</h1>
+                            <div className="flex items-center gap-2 text-sm text-gray-300">
+                                <span>★ {restaurant.rating}</span>
+                                <span>•</span>
+                                <span>{restaurant.location}</span>
+                            </div>
+                        </div>
+                        {restaurant.websiteUrl && (
+                            <a
+                                href={restaurant.websiteUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 bg-white/20 backdrop-blur-md hover:bg-white/30 text-white px-3 py-1.5 rounded-full text-xs font-bold transition-colors border border-white/10"
+                            >
+                                <span>🌐</span> View Website
+                            </a>
+                        )}
                     </div>
                 </div>
             </div>
