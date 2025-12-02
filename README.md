@@ -7,9 +7,11 @@ MenuLens is a mobile-first web application that helps users visualize restaurant
 ## Features
 
 - **Visual Menu**: See what dishes actually look like.
+- **Real Menu Scraper**: Fetches live menus from restaurant websites.
+- **Circular UI**: Modern, Instagram-story style restaurant discovery.
 - **Nutrition Facts**: Detailed calorie and nutrient breakdown.
 - **Social Proof**: Real reviews and photos from other diners.
-- **Premium Design**: Gold & Black aesthetic (iPhone 15 Optimized).
+- **Premium Design**: Red & Black aesthetic (iPhone 15 Optimized).
 
 ## Getting Started
 
