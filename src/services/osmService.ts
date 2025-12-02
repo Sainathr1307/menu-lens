@@ -1,5 +1,6 @@
 import {
-    Dish
+    Dish,
+    Restaurant
 } from "@/data/mockData";
 
 const OVERPASS_API_URL = "https://overpass-api.de/api/interpreter";
@@ -27,7 +28,7 @@ import { worldCuisines } from "@/data/worldCuisines";
 const getMenuForCuisine = (tags: OSMNode["tags"]): Dish[] => {
     const cuisine = tags.cuisine?.toLowerCase() || "";
     const name = tags.name?.toLowerCase() || "";
-    const combined = `${cuisine} ${name}`;
+    const combined = `${cuisine} ${name} `;
 
     // Helper to check keywords
     const has = (keywords: string[]) => keywords.some(k => combined.includes(k));
@@ -53,13 +54,13 @@ export const fetchNearbyRestaurants = async (lat: number, lng: number, radius: n
     // Query for restaurants within 'radius' meters (default 5km)
     // We fetch both nodes (points) and ways (buildings)
     const query = `
-    [out:json][timeout:25];
-    (
-      node["amenity"="restaurant"](around:${radius},${lat},${lng});
-      way["amenity"="restaurant"](around:${radius},${lat},${lng});
+[out:json][timeout: 25];
+(
+    node["amenity" = "restaurant"](around: ${radius}, ${lat}, ${lng});
+way["amenity" = "restaurant"](around: ${radius}, ${lat}, ${lng});
     );
     out center 20;
-  `;
+`;
 
     try {
         const response = await fetch(OVERPASS_API_URL, {
