@@ -273,3 +273,15 @@ export const restaurants: Restaurant[] = [
         menu: mockSouthIndianMenu,
     },
 ];
+
+export const getAllDishes = (): Dish[] => {
+    return [
+        ...mockIndianMenu,
+        ...mockSouthIndianMenu,
+        ...mockPizzaMenu,
+        ...mockBurgerMenu,
+        ...mockSushiMenu,
+        ...mockMexicanMenu,
+        ...mockChineseMenu,
+    ];
+};

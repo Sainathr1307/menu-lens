@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { restaurants as mockRestaurants, Restaurant } from "@/data/mockData";
 import RestaurantCard from "@/components/RestaurantCard";
 import { fetchNearbyRestaurants } from "@/services/osmService";
+import DishSwiper from "@/components/DishSwiper";
+import { Sparkles } from "lucide-react";
 
 export default function Home() {
   const [isLocating, setIsLocating] = useState(false);
@@ -12,6 +14,7 @@ export default function Home() {
   const [sortedRestaurants, setSortedRestaurants] = useState<Restaurant[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [usingRealData, setUsingRealData] = useState(false);
+  const [showSwiper, setShowSwiper] = useState(false);
 
   // Haversine formula to calculate distance in miles
   const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -106,6 +109,17 @@ export default function Home() {
         <p className="text-muted-foreground">See what you eat, before you order.</p>
       </header>
 
+      {/* Discover Button */}
+      <div className="flex justify-center mb-8">
+        <button
+          onClick={() => setShowSwiper(true)}
+          className="flex items-center gap-2 bg-gradient-to-r from-primary to-orange-600 text-white px-6 py-3 rounded-full font-bold shadow-lg shadow-primary/20 hover:scale-105 transition-transform active:scale-95"
+        >
+          <Sparkles size={20} />
+          Discover Dishes
+        </button>
+      </div>
+
       {/* Location Section */}
       <section className="mb-10 animate-[slide-up_0.5s_ease-out_0.2s_both]">
         {!locationDetected ? (
@@ -188,6 +202,8 @@ export default function Home() {
           </div>
         </section>
       )}
+
+      {showSwiper && <DishSwiper onClose={() => setShowSwiper(false)} />}
     </main>
   );
 }

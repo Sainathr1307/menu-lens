@@ -1,30 +1,47 @@
 "use client";
 
-import { use } from "react";
+import { use, useState, useEffect } from "react";
 import Link from "next/link";
-import { restaurants } from "@/data/mockData";
+import { restaurants, getAllDishes, Restaurant } from "@/data/mockData";
 import NutritionInfo from "@/components/NutritionInfo";
 import ReviewGallery from "@/components/ReviewGallery";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { fetchRestaurantById } from "@/services/osmService";
 
 export default function DishPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params);
     const router = useRouter();
+    const searchParams = useSearchParams();
+    const restaurantId = searchParams.get("restaurantId");
 
-    // Find dish across all restaurants (in a real app, we'd query by ID)
-    let dish = null;
-    let restaurant = null;
+    const [restaurant, setRestaurant] = useState<Restaurant | null>(null);
+    const [loadingRestaurant, setLoadingRestaurant] = useState(!!restaurantId);
 
-    for (const r of restaurants) {
-        const d = r.menu.find(m => m.id === resolvedParams.id);
-        if (d) {
-            dish = d;
-            restaurant = r;
-            break;
+    // Find dish globally
+    const allDishes = getAllDishes();
+    const dish = allDishes.find(d => d.id === resolvedParams.id);
+
+    useEffect(() => {
+        if (restaurantId) {
+            // Check static data first
+            const staticRestaurant = restaurants.find(r => r.id === restaurantId);
+            if (staticRestaurant) {
+                setRestaurant(staticRestaurant);
+                setLoadingRestaurant(false);
+            } else if (restaurantId.startsWith("osm-")) {
+                // Fetch OSM restaurant
+                setLoadingRestaurant(true);
+                fetchRestaurantById(restaurantId)
+                    .then(r => setRestaurant(r))
+                    .catch(e => console.error(e))
+                    .finally(() => setLoadingRestaurant(false));
+            } else {
+                setLoadingRestaurant(false);
+            }
         }
-    }
+    }, [restaurantId]);
 
-    if (!dish || !restaurant) {
+    if (!dish) {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <div className="text-center">
@@ -72,12 +89,14 @@ export default function DishPage({ params }: { params: Promise<{ id: string }> }
                         {dish.description}
                     </p>
 
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <span>from</span>
-                        <Link href={`/restaurant/${restaurant.id}`} className="text-primary hover:underline font-medium">
-                            {restaurant.name}
-                        </Link>
-                    </div>
+                    {restaurant && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                            <span>from</span>
+                            <Link href={`/restaurant/${restaurant.id}`} className="text-primary hover:underline font-medium">
+                                {restaurant.name}
+                            </Link>
+                        </div>
+                    )}
                 </div>
 
                 <NutritionInfo nutrition={dish.nutrition} />

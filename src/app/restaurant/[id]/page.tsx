@@ -6,11 +6,13 @@ import { restaurants, Restaurant } from "@/data/mockData";
 import DishCard from "@/components/DishCard";
 import { useRouter } from "next/navigation";
 import { fetchRestaurantById } from "@/services/osmService";
+import LensFab, { LensType } from "@/components/LensFab";
 
 export default function RestaurantPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params);
     const router = useRouter();
     const [searchQuery, setSearchQuery] = useState("");
+    const [activeLens, setActiveLens] = useState<LensType>("none");
 
     // Initialize with static data if available
     const [restaurant, setRestaurant] = useState<Restaurant | undefined>(
@@ -106,7 +108,7 @@ export default function RestaurantPage({ params }: { params: Promise<{ id: strin
                         </h2>
                         <div className="grid gap-4">
                             {famousDishes.map(dish => (
-                                <DishCard key={dish.id} dish={dish} />
+                                <DishCard key={dish.id} dish={dish} restaurantId={restaurant.id} activeLens={activeLens} />
                             ))}
                         </div>
                     </section>
@@ -125,12 +127,14 @@ export default function RestaurantPage({ params }: { params: Promise<{ id: strin
                     ) : (
                         <div className="grid gap-4">
                             {filteredDishes.map(dish => (
-                                <DishCard key={dish.id} dish={dish} />
+                                <DishCard key={dish.id} dish={dish} restaurantId={restaurant.id} activeLens={activeLens} />
                             ))}
                         </div>
                     )}
                 </section>
             </div>
+
+            <LensFab activeLens={activeLens} onLensChange={setActiveLens} />
         </main>
     );
 }
