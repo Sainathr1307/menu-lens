@@ -7,6 +7,7 @@ import DishCard from "@/components/DishCard";
 import { useRouter } from "next/navigation";
 import { fetchRestaurantById } from "@/services/osmService";
 import LensFab, { LensType } from "@/components/LensFab";
+import { motion } from "framer-motion";
 
 export default function RestaurantPage({ params }: { params: Promise<{ id: string }> }) {
     const resolvedParams = use(params);
@@ -64,6 +65,21 @@ export default function RestaurantPage({ params }: { params: Promise<{ id: strin
 
     const famousDishes = (restaurant?.menu || []).filter(d => d?.isFamous);
 
+    const container = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.05
+            }
+        }
+    };
+
+    const item = {
+        hidden: { opacity: 0, y: 20 },
+        show: { opacity: 1, y: 0 }
+    };
+
     return (
         <main className="min-h-screen pb-20 max-w-md mx-auto md:max-w-2xl lg:max-w-4xl bg-background">
             {/* Hero Section */}
@@ -120,11 +136,18 @@ export default function RestaurantPage({ params }: { params: Promise<{ id: strin
                         <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
                             <span className="text-primary">✨</span> Most Famous
                         </h2>
-                        <div className="grid gap-4">
+                        <motion.div
+                            variants={container}
+                            initial="hidden"
+                            animate="show"
+                            className="grid gap-4"
+                        >
                             {famousDishes.map(dish => (
-                                <DishCard key={dish.id} dish={dish} restaurantId={restaurant.id} activeLens={activeLens} />
+                                <motion.div key={dish.id} variants={item}>
+                                    <DishCard dish={dish} restaurantId={restaurant.id} activeLens={activeLens} />
+                                </motion.div>
                             ))}
-                        </div>
+                        </motion.div>
                     </section>
                 )}
 
@@ -139,11 +162,18 @@ export default function RestaurantPage({ params }: { params: Promise<{ id: strin
                             <p>No dishes found matching "{searchQuery}"</p>
                         </div>
                     ) : (
-                        <div className="grid gap-4">
+                        <motion.div
+                            variants={container}
+                            initial="hidden"
+                            animate="show"
+                            className="grid gap-4"
+                        >
                             {filteredDishes.map(dish => (
-                                <DishCard key={dish.id} dish={dish} restaurantId={restaurant.id} activeLens={activeLens} />
+                                <motion.div key={dish.id} variants={item}>
+                                    <DishCard dish={dish} restaurantId={restaurant.id} activeLens={activeLens} />
+                                </motion.div>
                             ))}
-                        </div>
+                        </motion.div>
                     )}
                 </section>
             </div>

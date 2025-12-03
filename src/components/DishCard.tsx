@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { Dish } from "@/data/mockData";
 import { LensType } from "./LensFab";
 import { motion } from "framer-motion";
+import { useState, MouseEvent } from "react";
+import { Heart } from "lucide-react";
+import confetti from "canvas-confetti";
 
 interface DishCardProps {
     dish: Dish;
@@ -11,6 +16,7 @@ interface DishCardProps {
 
 export default function DishCard({ dish, restaurantId, activeLens = "none" }: DishCardProps) {
     const href = restaurantId ? `/dish/${dish.id}?restaurantId=${restaurantId}` : `/dish/${dish.id}`;
+    const [isLiked, setIsLiked] = useState(false);
 
     // Lens Logic
     const isMatch = () => {
@@ -39,6 +45,34 @@ export default function DishCard({ dish, restaurantId, activeLens = "none" }: Di
     const match = isMatch();
     const isDimmed = activeLens !== "none" && !match;
 
+    const handleLike = (e: MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const newState = !isLiked;
+        setIsLiked(newState);
+
+        if (newState) {
+            // Haptic feedback
+            if (navigator.vibrate) navigator.vibrate(50);
+
+            // Confetti for famous dishes
+            if (dish.isFamous) {
+                const rect = (e.target as HTMLElement).getBoundingClientRect();
+                const x = (rect.left + rect.width / 2) / window.innerWidth;
+                const y = (rect.top + rect.height / 2) / window.innerHeight;
+
+                confetti({
+                    particleCount: 60,
+                    spread: 70,
+                    origin: { x, y },
+                    colors: ['#FF0000', '#FFD700', '#FFA500'],
+                    zIndex: 9999,
+                });
+            }
+        }
+    };
+
     return (
         <Link href={href} className={`block group ${isDimmed ? "pointer-events-none" : ""}`}>
             <motion.div
@@ -60,10 +94,21 @@ export default function DishCard({ dish, restaurantId, activeLens = "none" }: Di
                             {dish.name}
                         </div>
                         {dish.isFamous && (
-                            <div className="absolute top-0 left-0 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-br-lg">
+                            <div className="absolute top-0 left-0 bg-primary text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded-br-lg z-10">
                                 FAMOUS
                             </div>
                         )}
+
+                        {/* Like Button */}
+                        <button
+                            onClick={handleLike}
+                            className="absolute bottom-1 right-1 p-1.5 rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-colors z-20"
+                        >
+                            <Heart
+                                size={14}
+                                className={`transition-all duration-300 ${isLiked ? "fill-red-500 text-red-500 scale-110" : "text-white"}`}
+                            />
+                        </button>
                     </div>
 
                     <div className="w-2/3 p-3 flex flex-col justify-between">
